@@ -11,7 +11,7 @@ import joblib
 from google.cloud import storage
 
 # Setup Environment
-BUCKET_NAME = "usecase_fraud_detection" # Ganti dengan bucket Anda
+BUCKET_NAME = "usecase_sinarmas_fraud_detection" # Ganti dengan bucket Anda
 DATA_PATH = "Bank_Transaction_Fraud_Detection.csv"
 MODEL_DIR = os.getenv("AIP_MODEL_DIR", ".")
 

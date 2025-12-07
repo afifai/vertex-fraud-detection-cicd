@@ -11,8 +11,8 @@ import joblib
 from google.cloud import storage
 
 # Setup Environment
-BUCKET_NAME = "usecase_fraud_detection" # Ganti dengan bucket Anda
-DATA_PATH = "Bank_Transaction_Fraud_Detection.csv"
+BUCKET_NAME = "sinarmas-vertex-training" # Ganti dengan bucket Anda
+DATA_PATH = "data/Bank_Transaction_Fraud_Detection.csv"
 MODEL_DIR = os.getenv("AIP_MODEL_DIR", ".")
 
 def download_data(bucket_name, source_blob_name, destination_file_name):

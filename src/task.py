@@ -44,7 +44,7 @@ def train():
     
     # 2. Training
     # Parameter ini bisa kita ubah lewat argumen untuk testing hyperparameter
-    n_estimators = 100 
+    n_estimators = 200 
     model = RandomForestClassifier(n_estimators=n_estimators)
     model.fit(X_train, y_train)
     

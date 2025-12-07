@@ -9,20 +9,69 @@ BUCKET_NAME = "gs://sinarmas-vertex-training"
 REGION = "us-central1"
 DISPLAY_NAME = "fraud-detection-model"
 
-def get_baseline_metrics():
-    """Mencari metrics dari model terakhir yang sukses dideploy (jika ada)"""
-    aiplatform.init(project=PROJECT_ID, location=REGION)
+def download_json_from_gcs(gcs_uri):
+    """Helper untuk download file JSON dari GCS URI"""
     try:
-        # Ambil model terbaru dari Registry
-        models = aiplatform.Model.list(filter=f'display_name="{DISPLAY_NAME}"', order_by="create_time desc")
-        if models:
-            # Di scenario real, kita simpan metrics di Model Labels. 
-            # Untuk demo, kita anggap baseline hardcoded atau fetch dari GCS run sebelumnya.
-            # Mari kita simulasikan baseline untuk demo:
-            return {"accuracy": 0.85, "f1_score": 0.80} 
+        storage_client = storage.Client()
+        
+        # Parse gs://bucket/path/to/file.json
+        parts = gcs_uri.replace("gs://", "").split("/", 1)
+        bucket_name = parts[0]
+        blob_name = parts[1]
+        
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        
+        data = blob.download_as_text()
+        return json.loads(data)
     except Exception as e:
-        print(f"Warning: Could not fetch baseline: {e}")
-    return None
+        print(f"  [Info] Gagal download metrik dari {gcs_uri}: {e}")
+        return None
+
+def get_baseline_metrics():
+    """
+    Logika:
+    1. Cari model dengan display_name tertentu di Registry.
+    2. Ambil model yang paling baru dibuat (create_time desc).
+    3. Cek lokasi GCS model tersebut (model.uri).
+    4. Coba download 'metrics.json' dari lokasi tersebut.
+    """
+    print("1. Mencari baseline metrics dari Model Registry...")
+    aiplatform.init(project=PROJECT_ID, location=REGION)
+    
+    try:
+        # Ambil list model, urutkan dari yang terbaru
+        models = aiplatform.Model.list(
+            filter=f'display_name="{DISPLAY_NAME}"', 
+            order_by="create_time desc"
+        )
+        
+        if not models:
+            print("  - Belum ada model di registry. Ini adalah run pertama.")
+            return None
+            
+        latest_model = models[0]
+        print(f"  - Model terakhir ditemukan: {latest_model.resource_name}")
+        print(f"  - Model URI: {latest_model.uri}")
+        
+        # Vertex AI menyimpan model di folder. Kita asumsikan metrics.json ada di dalamnya.
+        # Format model.uri biasanya: gs://bucket/output/dir/ (tanpa nama file)
+        base_uri = latest_model.uri.rstrip("/")
+        metrics_uri = f"{base_uri}/metrics.json"
+        
+        print(f"  - Mencoba fetch: {metrics_uri}")
+        metrics = download_json_from_gcs(metrics_uri)
+        
+        if metrics:
+            print(f"  - Baseline Metrics ditemukan: {metrics}")
+            return metrics
+        else:
+            print("  - File metrics.json tidak ditemukan di artifact model terakhir.")
+            return None
+            
+    except Exception as e:
+        print(f"Warning: Error saat mengambil baseline: {e}")
+        return None
 
 def download_metrics(gcs_folder):
     """Download metrics.json dari hasil training baru"""

@@ -5,7 +5,7 @@ import json
 import time
 
 PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-BUCKET_NAME = "gs://usecase_sinarmas_fraud_detection"
+BUCKET_NAME = "gs://usecase_fraud_detection"
 REGION = "us-central1"
 DISPLAY_NAME = "fraud-detection-model"
 

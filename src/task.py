@@ -64,7 +64,7 @@ def train():
     metrics = {
         "accuracy": acc,
         "f1_score": f1,
-        "n_estimators": n_estimators
+        # "n_estimators": n_estimators
     }
     with open("metrics.json", "w") as f:
         json.dump(metrics, f)

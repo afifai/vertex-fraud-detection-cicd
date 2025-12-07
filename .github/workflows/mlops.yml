@@ -1,0 +1,85 @@
+name: MLOps Vertex AI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request: # Trigger on PR
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write # IZIN PENTING: Agar bot bisa komen di PR
+
+jobs:
+  # JOB 1: QUALITY CHECK (Linter & Test)
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Linting Tools
+        run: pip install flake8 pytest
+
+      - name: Run Linter (Flake8)
+        # Akan gagal jika ada syntax error atau code style berantakan
+        run: |
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  # JOB 2: TRAINING & REPORTING
+  train-and-report:
+    needs: quality-check # Hanya jalan jika quality-check sukses
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install google-cloud-aiplatform google-cloud-storage pandas
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Run Vertex AI Training & Generate Report
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: python deploy.py
+        # Script ini akan menghasilkan file 'report.md' jika sukses
+
+      # STEP KHUSUS: Mengirim Comment ke Pull Request
+      - name: Comment PR with Report
+        if: github.event_name == 'pull_request' # Hanya jalan jika ini adalah PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            // Baca file report.md yang dihasilkan python script
+            try {
+              const report = fs.readFileSync('report.md', 'utf8');
+              
+              // Post comment ke PR
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            } catch (err) {
+              console.log("No report.md found or error reading it.");
+            }

@@ -4,7 +4,7 @@ import json
 import os
 import subprocess
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, f1_score
 import joblib
@@ -44,8 +44,8 @@ def train():
     
     # 2. Training
     # Parameter ini bisa kita ubah lewat argumen untuk testing hyperparameter
-    n_estimators = 100 
-    model = RandomForestClassifier(n_estimators=n_estimators)
+    # n_estimators = 100 
+    model = GradientBoostingClassifier()
     model.fit(X_train, y_train)
     
     # 3. Evaluation
@@ -64,7 +64,7 @@ def train():
     metrics = {
         "accuracy": acc,
         "f1_score": f1,
-        "n_estimators": n_estimators
+        # "n_estimators": n_estimators
     }
     with open("metrics.json", "w") as f:
         json.dump(metrics, f)

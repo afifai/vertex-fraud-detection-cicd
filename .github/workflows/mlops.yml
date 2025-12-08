@@ -45,10 +45,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install Dependencies
-        run: pip install google-cloud-aiplatform google-cloud-storage pandas
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-cloud-aiplatform[all] google-cloud-storage pandas scikit-learn importlib-metadata
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1

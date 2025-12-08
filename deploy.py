@@ -40,8 +40,6 @@ def create_markdown_report(current):
 | **Accuracy** | {current['accuracy']:.4f} |
 | **F1 Score** | {current['f1_score']:.4f} |
 
-### ⚙️ Parameters
-- **n_estimators**: {current.get('n_estimators', 'N/A')}
 
 _Report generated automatically by GitHub Actions_
     """
